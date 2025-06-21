@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART QR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        :root {
+            --primary-green: #4CAF50;
+            --light-green: #E8F5E9;
+            --dark-text: #333;
+            --white: #FFFFFF;
+            --border-color: #ddd;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-green);
+            color: var(--dark-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: var(--primary-green);
+            margin-top: 2rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* Main Container */
+        .container {
+            background-color: var(--white);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px var(--shadow);
+            width: 90%;
+            max-width: 800px;
+            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Form Grouping */
+        .form-group {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: var(--dark-text);
+        }
+
+        /* Inputs, Textareas, Selects */
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: calc(100% - 1.2rem); /* Account for padding */
+            padding: 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: var(--white);
+            color: var(--dark-text);
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 80px;
+        }
+
+        /* Color Inputs & File Input */
+        .color-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .color-inputs div {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 5px;
+            overflow: hidden; /* Hide default color picker border */
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+        input[type="color"]::-moz-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-moz-color-swatch {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            padding: 0.5rem 0;
+        }
+
+
+        /* Buttons */
+        button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 1rem;
+            width: auto;
+            align-self: center; /* Center button in flex column */
+        }
+
+        button:hover {
+            background-color: #45a049; /* Slightly darker green */
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Radio Buttons for Format */
+        .format-options {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .format-options label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .format-options input[type="radio"] {
+            margin-right: 0.5rem;
+            /* Style custom radio if desired, otherwise default is fine */
+        }
+
+        /* QR Output Container */
+        .qr-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem; /* Space between QR boxes */
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .qr-box {
+            background-color: var(--white);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 220px; /* Ensure a minimum size for QR code */
+            max-width: 250px;
+        }
+
+        .qr-box canvas, .qr-box img {
+            border: 1px solid var(--light-green); /* Subtle border for QR image */
+            border-radius: 5px;
+        }
+
+        .qr-box button {
+            margin-top: 0.5rem; /* Space between QR and download button */
+        }
+
+        /* Specific Mode Containers */
+        #bulkMode, #vcardMode {
+            padding-top: 1rem;
+            border-top: 1px solid var(--light-green);
+        }
+        #bulkMode textarea {
+            min-height: 150px;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem auto;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-top: 1.5rem;
+            }
+
+            .form-group {
+                gap: 0.4rem;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            textarea,
+            select {
+                padding: 0.5rem;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 0.7rem 1.2rem;
+                font-size: 1rem;
+            }
+
+            .qr-box {
+                min-width: 180px;
+                max-width: 90%; /* Allow QR boxes to take more width on small screens */
+            }
+
+            .color-inputs {
+                flex-direction: column; /* Stack color inputs on small screens */
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .qr-container {
+                gap: 1rem;
+            }
+            .qr-box {
+                padding: 0.8rem;
+                min-width: unset; /* Remove min-width to let flex-wrap handle it */
+                width: 100%; /* Make each QR box take full width on very small screens */
+                max-width: 300px; /* Optional: limit overall max width */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>SMART QR</h1>
+
+    <div class="container">
+        <div class="form-group">
+            <label for="modeSelect">Choose Mode:</label>
+            <select id="modeSelect" onchange="toggleMode()">
+                <option value="single">Single Text/URL</option>
+                <option value="bulk">Bulk (Multiple items)</option>
+                <option value="vcard">Contact (vCard)</option>
+            </select>
+        </div>
+
+        <div id="singleMode" class="form-group">
+            <label for="text">Enter Text or URL:</label>
+            <textarea id="text" placeholder="e.g., https://example.com or Your message here" rows="4"></textarea>
+        </div>
+
+        <div id="bulkMode" class="form-group hidden">
+            <label for="bulkText">Enter one item per line:</label>
+            <textarea id="bulkText" placeholder="Line 1
+Line 2
+Line 3" rows="8"></textarea>
+        </div>
+
+        <div id="vcardMode" class="form-group hidden">
+            <label>Contact (vCard) Details:</label>
+            <input type="text" id="vName" placeholder="Full Name">
+            <input type="text" id="vPhone" placeholder="Phone Number">
+            <input type="email" id="vEmail" placeholder="Email Address">
+            <input type="text" id="vOrg" placeholder="Organization">
+            <input type="text" id="vTitle" placeholder="Job Title">
+        </div>
+
+        <div class="color-inputs">
+            <div>
+                <label for="fgColor">Foreground:</label>
+                <input type="color" id="fgColor" value="#000000">
+            </div>
+            <div>
+                <label for="bgColor">Background:</label>
+                <input type="color" id="bgColor" value="#ffffff">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="logoUpload">Upload Logo (PNG/JPG):</label>
+            <input type="file" id="logoUpload" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label>Output Format:</label>
+            <div class="format-options">
+                <label><input type="radio" name="format" value="canvas" checked> PNG (Canvas)</label>
+                <label><input type="radio" name="format" value="svg"> SVG</label>
+            </div>
+        </div>
+
+        <button onclick="generate()">Generate QR Code(s)</button>
+
+        <div class="qr-container" id="qrOutput"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', toggleMode); // Ensure correct mode display on load
+
+        function toggleMode() {
+            const mode = document.getElementById("modeSelect").value;
+            // Add 'hidden' class to all mode divs and then remove it for the active one
+            document.getElementById("singleMode").classList.add("hidden");
+            document.getElementById("bulkMode").classList.add("hidden");
+            document.getElementById("vcardMode").classList.add("hidden");
+
+            if (mode === "single") {
+                document.getElementById("singleMode").classList.remove("hidden");
+            } else if (mode === "bulk") {
+                document.getElementById("bulkMode").classList.remove("hidden");
+            } else if (mode === "vcard") {
+                document.getElementById("vcardMode").classList.remove("hidden");
+            }
+        }
+
+        function getQRCodeData(mode) {
+            if (mode === "single") {
+                const textValue = document.getElementById("text").value.trim();
+                return textValue ? [textValue] : [];
+            } else if (mode === "bulk") {
+                return document.getElementById("bulkText").value.trim().split('\n').filter(line => line.trim() !== '');
+            } else if (mode === "vcard") {
+                const name = document.getElementById("vName").value.trim();
+                const phone = document.getElementById("vPhone").value.trim();
+                const email = document.getElementById("vEmail").value.trim();
+                const org = document.getElementById("vOrg").value.trim();
+                const title = document.getElementById("vTitle").value.trim();
+
+                // Only generate vCard if at least a name or phone is provided
+                if (!name && !phone && !email && !org && !title) {
+                    return []; // Return empty if no vCard data
+                }
+
+                return [`BEGIN:VCARD
+VERSION:3.0
+N:${name}
+TEL:${phone}
+EMAIL:${email}
+ORG:${org}
+TITLE:${title}
+END:VCARD`];
+            }
+        }
+
+        function generate() {
+            const mode = document.getElementById("modeSelect").value;
+            const dataList = getQRCodeData(mode);
+            const output = document.getElementById("qrOutput");
+            const fgColor = document.getElementById("fgColor").value;
+            const bgColor = document.getElementById("bgColor").value;
+            const logoFile = document.getElementById("logoUpload").files[0];
+            const format = document.querySelector('input[name="format"]:checked').value;
+
+            output.innerHTML = ""; // Clear previous QR codes
+
+            if (dataList.length === 0) {
+                output.innerHTML = '<p style="color: var(--dark-text); text-align: center;">Please enter data to generate QR code(s).</p>';
+                return;
+            }
+
+            dataList.forEach((data, index) => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "qr-box";
+
+                const qrDiv = document.createElement("div"); // This will hold the QR code
+                wrapper.appendChild(qrDiv);
+
+                if (format === "canvas") {
+                    const qr = new QRCode(qrDiv, { // Directly append to qrDiv
+                        text: data,
+                        width: 200,
+                        height: 200,
+                        colorDark: fgColor,
+                        colorLight: bgColor,
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    // QRCode.js generates a canvas directly inside qrDiv if qrDiv is empty.
+                    // We need a slight delay to ensure the canvas is rendered before trying to add a logo or download.
+                    setTimeout(() => {
+                        const canvas = qrDiv.querySelector("canvas");
+                        if (!canvas) { // If QRCode.js returned an IMG instead of canvas (e.g., older browser or bug)
+                            const imgElement = qrDiv.querySelector("img");
+                            if (imgElement) {
+                                // Create a new canvas from the image
+                                const tempCanvas = document.createElement("canvas");
+                                const ctx = tempCanvas.getContext("2d");
+                                tempCanvas.width = imgElement.width;
+                                tempCanvas.height = imgElement.height;
+                                ctx.drawImage(imgElement, 0, 0);
+                                // Replace the img with the new canvas
+                                qrDiv.innerHTML = "";
+                                qrDiv.appendChild(tempCanvas);
+                                applyLogoAndDownload(wrapper, tempCanvas, logoFile, index);
+                            }
+                        } else {
+                            applyLogoAndDownload(wrapper, canvas, logoFile, index);
+                        }
+                    }, 100); // Shorter delay might be sufficient now
+
+                } else if (format === "svg") {
+                    // For SVG, QRCode.js unfortunately generates an <img> tag with a data URL SVG.
+                    // This makes direct SVG manipulation (like adding logo) difficult without external libraries.
+                    // For simplicity, we'll just display the SVG as an image and download it.
+                    // If true SVG embedding/manipulation is needed, a different QR library or approach is required.
+                    const svgQrTempDiv = document.createElement("div"); // Temporary div for QRCode.js to render into
+                    new QRCode(svgQrTempDiv, {
+                        text: data,
+                        width: 200,
+                        height: 200,
+                        colorDark: fgColor,
+                        colorLight: bgColor,
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    setTimeout(() => {
+                        const svgImg = svgQrTempDiv.querySelector("img"); // This will be the img with SVG data URL
+                        if (svgImg) {
+                            qrDiv.innerHTML = ""; // Clear temp div content
+                            qrDiv.appendChild(svgImg); // Append the SVG img
+                            addDownloadBtn(wrapper, svgImg.src, index, "svg"); // Add download for SVG
+                        }
+                    }, 100);
+                }
+
+                output.appendChild(wrapper);
+            });
+        }
+
+        function applyLogoAndDownload(wrapper, canvas, logoFile, index) {
+            const ctx = canvas.getContext("2d");
+            if (logoFile) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const logoImg = new Image();
+                    logoImg.src = e.target.result;
+                    logoImg.onload = function () {
+                        const size = canvas.width * 0.25; // Slightly larger logo
+                        const x = (canvas.width - size) / 2;
+                        const y = (canvas.height - size) / 2;
+
+                        // Draw white background for logo to prevent QR code lines showing through
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.arc(canvas.width / 2, canvas.height / 2, size / 2 + 5, 0, Math.PI * 2, false); // Add a small border
+                        ctx.fill();
+
+                        ctx.drawImage(logoImg, x, y, size, size);
+                        addDownloadBtn(wrapper, canvas.toDataURL(), index, "png");
+                    };
+                };
+                reader.readAsDataURL(logoFile);
+            } else {
+                addDownloadBtn(wrapper, canvas.toDataURL(), index, "png");
+            }
+        }
+
+        function addDownloadBtn(container, dataUrl, index, type) {
+            const btn = document.createElement("button");
+            btn.innerText = `Download ${type.toUpperCase()}`;
+            btn.onclick = () => {
+                const link = document.createElement("a");
+                link.href = dataUrl;
+                let fileName = `qr-code-${index + 1}`;
+                if (type === "png") {
+                    link.download = `${fileName}.png`;
+                } else if (type === "svg") {
+                    link.download = `${fileName}.svg`; // For SVG, ensure correct extension
+                }
+                link.click();
+            };
+            container.appendChild(btn);
+        }
+    </script>
+    <script>
+        // Service Worker registration (keep this as is)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch(err => console.error('SW registration failed', err));
+        }
+    </script>
+</body>
+</html>
