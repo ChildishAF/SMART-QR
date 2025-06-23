@@ -16,6 +16,7 @@
             --white: #FFFFFF;
             --border-color: #ddd;
             --shadow: rgba(0, 0, 0, 0.1);
+            --error-red: #d32f2f; /* Added for validation feedback */
         }
 
         body {
@@ -68,6 +69,7 @@
         /* Inputs, Textareas, Selects */
         input[type="text"],
         input[type="email"],
+        input[type="password"], /* Added for Wi-Fi */
         textarea,
         select {
             width: calc(100% - 1.2rem); /* Account for padding */
@@ -82,6 +84,7 @@
 
         input[type="text"]:focus,
         input[type="email"]:focus,
+        input[type="password"]:focus, /* Added for Wi-Fi */
         textarea:focus,
         select:focus {
             border-color: var(--primary-green);
@@ -93,6 +96,22 @@
             resize: vertical; /* Allow vertical resizing */
             min-height: 80px;
         }
+
+        /* Validation Feedback */
+        input.error, textarea.error, select.error {
+            border-color: var(--error-red);
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.2);
+        }
+        .error-message {
+            color: var(--error-red);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+            display: none; /* Hidden by default */
+        }
+        .error-message.active {
+            display: block; /* Show when active */
+        }
+
 
         /* Color Inputs & File Input */
         .color-inputs {
@@ -140,6 +159,13 @@
 
 
         /* Buttons */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
         button {
             background-color: var(--primary-green);
             color: var(--white);
@@ -149,9 +175,7 @@
             font-size: 1.1rem;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-top: 1rem;
             width: auto;
-            align-self: center; /* Center button in flex column */
         }
 
         button:hover {
@@ -162,6 +186,13 @@
         button:active {
             transform: translateY(0);
         }
+        button.reset-button {
+            background-color: #f44336; /* Red for reset */
+        }
+        button.reset-button:hover {
+            background-color: #d32f2f; /* Darker red */
+        }
+
 
         /* Radio Buttons for Format */
         .format-options {
@@ -177,7 +208,6 @@
         }
         .format-options input[type="radio"] {
             margin-right: 0.5rem;
-            /* Style custom radio if desired, otherwise default is fine */
         }
 
         /* QR Output Container */
@@ -214,7 +244,7 @@
         }
 
         /* Specific Mode Containers */
-        #bulkMode, #vcardMode {
+        #bulkMode, #vcardMode, #wifiMode { /* Added wifiMode */
             padding-top: 1rem;
             border-top: 1px solid var(--light-green);
         }
@@ -246,6 +276,7 @@
 
             input[type="text"],
             input[type="email"],
+            input[type="password"], /* Added for Wi-Fi */
             textarea,
             select {
                 padding: 0.5rem;
@@ -266,6 +297,14 @@
                 flex-direction: column; /* Stack color inputs on small screens */
                 align-items: flex-start;
             }
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            .button-group button {
+                width: 100%; /* Make buttons full width */
+                max-width: 250px; /* Limit width to prevent stretching too wide */
+            }
         }
 
         @media (max-width: 480px) {
@@ -280,9 +319,9 @@
             }
             .qr-box {
                 padding: 0.8rem;
-                min-width: unset; /* Remove min-width to let flex-wrap handle it */
-                width: 100%; /* Make each QR box take full width on very small screens */
-                max-width: 300px; /* Optional: limit overall max width */
+                min-width: unset;
+                width: 100%;
+                max-width: 300px;
             }
         }
     </style>
@@ -297,12 +336,23 @@
                 <option value="single">Single Text/URL</option>
                 <option value="bulk">Bulk (Multiple items)</option>
                 <option value="vcard">Contact (vCard)</option>
+                <option value="wifi">Wi-Fi Network</option> </select>
+        </div>
+
+        <div class="form-group">
+            <label for="sizeSelect">QR Code Size:</label>
+            <select id="sizeSelect">
+                <option value="150">Small (150x150 px)</option>
+                <option value="200" selected>Medium (200x200 px)</option>
+                <option value="300">Large (300x300 px)</option>
+                <option value="400">X-Large (400x400 px)</option>
             </select>
         </div>
 
         <div id="singleMode" class="form-group">
             <label for="text">Enter Text or URL:</label>
             <textarea id="text" placeholder="e.g., https://example.com or Your message here" rows="4"></textarea>
+            <div id="textError" class="error-message">Please enter text or URL.</div>
         </div>
 
         <div id="bulkMode" class="form-group hidden">
@@ -310,6 +360,7 @@
             <textarea id="bulkText" placeholder="Line 1
 Line 2
 Line 3" rows="8"></textarea>
+            <div id="bulkTextError" class="error-message">Please enter at least one item.</div>
         </div>
 
         <div id="vcardMode" class="form-group hidden">
@@ -319,6 +370,19 @@ Line 3" rows="8"></textarea>
             <input type="email" id="vEmail" placeholder="Email Address">
             <input type="text" id="vOrg" placeholder="Organization">
             <input type="text" id="vTitle" placeholder="Job Title">
+            <div id="vcardError" class="error-message">Please fill at least one vCard field.</div>
+        </div>
+
+        <div id="wifiMode" class="form-group hidden">
+            <label>Wi-Fi Network Details:</label>
+            <input type="text" id="wifiSsid" placeholder="Network SSID (Name)">
+            <div id="wifiSsidError" class="error-message">SSID cannot be empty.</div>
+            <input type="password" id="wifiPassword" placeholder="Password (leave blank for open)">
+            <select id="wifiEncryption">
+                <option value="WPA">WPA/WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">No Encryption</option>
+            </select>
         </div>
 
         <div class="color-inputs">
@@ -345,7 +409,10 @@ Line 3" rows="8"></textarea>
             </div>
         </div>
 
-        <button onclick="generate()">Generate QR Code(s)</button>
+        <div class="button-group">
+            <button onclick="generate()">Generate QR Code(s)</button>
+            <button onclick="clearForm()" class="reset-button">Clear All</button> </div>
+
 
         <div class="qr-container" id="qrOutput"></div>
     </div>
@@ -361,6 +428,12 @@ Line 3" rows="8"></textarea>
             document.getElementById("singleMode").classList.add("hidden");
             document.getElementById("bulkMode").classList.add("hidden");
             document.getElementById("vcardMode").classList.add("hidden");
+            document.getElementById("wifiMode").classList.add("hidden"); // Hide new Wi-Fi mode
+
+            // Also hide all error messages when mode changes
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('input.error, textarea.error, select.error').forEach(el => el.classList.remove('error'));
+
 
             if (mode === "single") {
                 document.getElementById("singleMode").classList.remove("hidden");
@@ -368,13 +441,59 @@ Line 3" rows="8"></textarea>
                 document.getElementById("bulkMode").classList.remove("hidden");
             } else if (mode === "vcard") {
                 document.getElementById("vcardMode").classList.remove("hidden");
+            } else if (mode === "wifi") { // Show new Wi-Fi mode
+                document.getElementById("wifiMode").classList.remove("hidden");
             }
+        }
+
+        // --- Input Validation Function ---
+        function validateInputs(mode) {
+            let isValid = true;
+
+            // Clear previous errors
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('input.error, textarea.error, select.error').forEach(el => el.classList.remove('error'));
+
+            if (mode === "single") {
+                const textInput = document.getElementById("text");
+                if (textInput.value.trim() === "") {
+                    textInput.classList.add("error");
+                    document.getElementById("textError").classList.add("active");
+                    isValid = false;
+                }
+            } else if (mode === "bulk") {
+                const bulkTextInput = document.getElementById("bulkText");
+                if (bulkTextInput.value.trim() === "") {
+                    bulkTextInput.classList.add("error");
+                    document.getElementById("bulkTextError").classList.add("active");
+                    isValid = false;
+                }
+            } else if (mode === "vcard") {
+                const name = document.getElementById("vName").value.trim();
+                const phone = document.getElementById("vPhone").value.trim();
+                const email = document.getElementById("vEmail").value.trim();
+                const org = document.getElementById("vOrg").value.trim();
+                const title = document.getElementById("vTitle").value.trim();
+
+                if (!name && !phone && !email && !org && !title) {
+                    document.getElementById("vName").classList.add("error"); // Highlight first field
+                    document.getElementById("vcardError").classList.add("active");
+                    isValid = false;
+                }
+            } else if (mode === "wifi") { // Wi-Fi validation
+                const ssidInput = document.getElementById("wifiSsid");
+                if (ssidInput.value.trim() === "") {
+                    ssidInput.classList.add("error");
+                    document.getElementById("wifiSsidError").classList.add("active");
+                    isValid = false;
+                }
+            }
+            return isValid;
         }
 
         function getQRCodeData(mode) {
             if (mode === "single") {
-                const textValue = document.getElementById("text").value.trim();
-                return textValue ? [textValue] : [];
+                return [document.getElementById("text").value.trim()];
             } else if (mode === "bulk") {
                 return document.getElementById("bulkText").value.trim().split('\n').filter(line => line.trim() !== '');
             } else if (mode === "vcard") {
@@ -384,35 +503,57 @@ Line 3" rows="8"></textarea>
                 const org = document.getElementById("vOrg").value.trim();
                 const title = document.getElementById("vTitle").value.trim();
 
-                // Only generate vCard if at least a name or phone is provided
-                if (!name && !phone && !email && !org && !title) {
-                    return []; // Return empty if no vCard data
-                }
+                // Build vCard string dynamically, only including fields that have data
+                let vcardString = `BEGIN:VCARD\nVERSION:3.0`;
+                if (name) vcardString += `\nN:${name}`;
+                if (phone) vcardString += `\nTEL:${phone}`;
+                if (email) vcardString += `\nEMAIL:${email}`;
+                if (org) vcardString += `\nORG:${org}`;
+                if (title) vcardString += `\nTITLE:${title}`;
+                vcardString += `\nEND:VCARD`;
 
-                return [`BEGIN:VCARD
-VERSION:3.0
-N:${name}
-TEL:${phone}
-EMAIL:${email}
-ORG:${org}
-TITLE:${title}
-END:VCARD`];
+                return [vcardString];
+            } else if (mode === "wifi") { // Get Wi-Fi data
+                const ssid = document.getElementById("wifiSsid").value.trim();
+                const password = document.getElementById("wifiPassword").value.trim();
+                const encryption = document.getElementById("wifiEncryption").value;
+
+                // Format: WIFI:S:<SSID>;T:<encryption>;P:<password>;;
+                // Note: If no password and encryption is "nopass", T field can be omitted or T:nopass
+                let wifiData = `WIFI:S:${ssid};`;
+                if (encryption !== "nopass") {
+                    wifiData += `T:${encryption};`;
+                }
+                if (password) {
+                    wifiData += `P:${password};`;
+                }
+                wifiData += `;`; // Double semicolon at the end is part of the standard
+
+                return [wifiData];
             }
         }
 
         function generate() {
             const mode = document.getElementById("modeSelect").value;
+
+            // --- Validation Step ---
+            if (!validateInputs(mode)) {
+                document.getElementById("qrOutput").innerHTML = '<p style="color: var(--error-red); text-align: center;">Please correct the highlighted fields.</p>';
+                return; // Stop generation if validation fails
+            }
+
             const dataList = getQRCodeData(mode);
             const output = document.getElementById("qrOutput");
             const fgColor = document.getElementById("fgColor").value;
             const bgColor = document.getElementById("bgColor").value;
             const logoFile = document.getElementById("logoUpload").files[0];
             const format = document.querySelector('input[name="format"]:checked').value;
+            const qrSize = parseInt(document.getElementById("sizeSelect").value); // Get QR code size
 
             output.innerHTML = ""; // Clear previous QR codes
 
-            if (dataList.length === 0) {
-                output.innerHTML = '<p style="color: var(--dark-text); text-align: center;">Please enter data to generate QR code(s).</p>';
+            if (dataList.length === 0 || dataList[0] === "") { // Check if getQRCodeData returned empty or invalid string
+                output.innerHTML = '<p style="color: var(--dark-text); text-align: center;">No valid data to generate QR code(s).</p>';
                 return;
             }
 
@@ -426,27 +567,23 @@ END:VCARD`];
                 if (format === "canvas") {
                     const qr = new QRCode(qrDiv, { // Directly append to qrDiv
                         text: data,
-                        width: 200,
-                        height: 200,
+                        width: qrSize, // Use selected size
+                        height: qrSize, // Use selected size
                         colorDark: fgColor,
                         colorLight: bgColor,
                         correctLevel: QRCode.CorrectLevel.H
                     });
 
-                    // QRCode.js generates a canvas directly inside qrDiv if qrDiv is empty.
-                    // We need a slight delay to ensure the canvas is rendered before trying to add a logo or download.
                     setTimeout(() => {
                         const canvas = qrDiv.querySelector("canvas");
-                        if (!canvas) { // If QRCode.js returned an IMG instead of canvas (e.g., older browser or bug)
+                        if (!canvas) {
                             const imgElement = qrDiv.querySelector("img");
                             if (imgElement) {
-                                // Create a new canvas from the image
                                 const tempCanvas = document.createElement("canvas");
                                 const ctx = tempCanvas.getContext("2d");
                                 tempCanvas.width = imgElement.width;
                                 tempCanvas.height = imgElement.height;
                                 ctx.drawImage(imgElement, 0, 0);
-                                // Replace the img with the new canvas
                                 qrDiv.innerHTML = "";
                                 qrDiv.appendChild(tempCanvas);
                                 applyLogoAndDownload(wrapper, tempCanvas, logoFile, index);
@@ -454,29 +591,28 @@ END:VCARD`];
                         } else {
                             applyLogoAndDownload(wrapper, canvas, logoFile, index);
                         }
-                    }, 100); // Shorter delay might be sufficient now
+                    }, 100);
 
                 } else if (format === "svg") {
-                    // For SVG, QRCode.js unfortunately generates an <img> tag with a data URL SVG.
-                    // This makes direct SVG manipulation (like adding logo) difficult without external libraries.
-                    // For simplicity, we'll just display the SVG as an image and download it.
-                    // If true SVG embedding/manipulation is needed, a different QR library or approach is required.
-                    const svgQrTempDiv = document.createElement("div"); // Temporary div for QRCode.js to render into
+                    const svgQrTempDiv = document.createElement("div");
                     new QRCode(svgQrTempDiv, {
                         text: data,
-                        width: 200,
-                        height: 200,
+                        width: qrSize, // Use selected size
+                        height: qrSize, // Use selected size
                         colorDark: fgColor,
                         colorLight: bgColor,
                         correctLevel: QRCode.CorrectLevel.H
                     });
 
                     setTimeout(() => {
-                        const svgImg = svgQrTempDiv.querySelector("img"); // This will be the img with SVG data URL
+                        const svgImg = svgQrTempDiv.querySelector("img");
                         if (svgImg) {
-                            qrDiv.innerHTML = ""; // Clear temp div content
-                            qrDiv.appendChild(svgImg); // Append the SVG img
-                            addDownloadBtn(wrapper, svgImg.src, index, "svg"); // Add download for SVG
+                            qrDiv.innerHTML = "";
+                            qrDiv.appendChild(svgImg);
+                            // Set the SVG image dimensions explicitly as QRCode.js might not do it well for SVG
+                            svgImg.style.width = `${qrSize}px`;
+                            svgImg.style.height = `${qrSize}px`;
+                            addDownloadBtn(wrapper, svgImg.src, index, "svg");
                         }
                     }, 100);
                 }
@@ -493,14 +629,14 @@ END:VCARD`];
                     const logoImg = new Image();
                     logoImg.src = e.target.result;
                     logoImg.onload = function () {
-                        const size = canvas.width * 0.25; // Slightly larger logo
+                        const size = canvas.width * 0.25;
                         const x = (canvas.width - size) / 2;
                         const y = (canvas.height - size) / 2;
 
                         // Draw white background for logo to prevent QR code lines showing through
                         ctx.fillStyle = '#FFFFFF';
                         ctx.beginPath();
-                        ctx.arc(canvas.width / 2, canvas.height / 2, size / 2 + 5, 0, Math.PI * 2, false); // Add a small border
+                        ctx.arc(canvas.width / 2, canvas.height / 2, size / 2 + 5, 0, Math.PI * 2, false);
                         ctx.fill();
 
                         ctx.drawImage(logoImg, x, y, size, size);
@@ -523,11 +659,48 @@ END:VCARD`];
                 if (type === "png") {
                     link.download = `${fileName}.png`;
                 } else if (type === "svg") {
-                    link.download = `${fileName}.svg`; // For SVG, ensure correct extension
+                    link.download = `${fileName}.svg`;
                 }
                 link.click();
             };
             container.appendChild(btn);
+        }
+
+        // --- Clear Form Function ---
+        function clearForm() {
+            // Clear text inputs and textareas
+            document.getElementById("text").value = "";
+            document.getElementById("bulkText").value = "";
+            document.getElementById("vName").value = "";
+            document.getElementById("vPhone").value = "";
+            document.getElementById("vEmail").value = "";
+            document.getElementById("vOrg").value = "";
+            document.getElementById("vTitle").value = "";
+            document.getElementById("wifiSsid").value = "";
+            document.getElementById("wifiPassword").value = "";
+
+            // Reset select dropdowns
+            document.getElementById("modeSelect").value = "single";
+            document.getElementById("sizeSelect").value = "200"; // Reset to default medium size
+            document.getElementById("wifiEncryption").value = "WPA"; // Reset Wi-Fi encryption
+
+            // Reset color pickers
+            document.getElementById("fgColor").value = "#000000";
+            document.getElementById("bgColor").value = "#ffffff";
+
+            // Clear file input (requires recreating the input for security reasons, or just setting value to empty string)
+            const logoUpload = document.getElementById("logoUpload");
+            logoUpload.value = ''; // This will clear the selected file
+
+            // Clear generated QR codes
+            document.getElementById("qrOutput").innerHTML = "";
+
+            // Reset validation states
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('input.error, textarea.error, select.error').forEach(el => el.classList.remove('error'));
+
+            // Ensure the correct mode is displayed after clearing
+            toggleMode();
         }
     </script>
     <script>
